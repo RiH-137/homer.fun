@@ -18,6 +18,7 @@ const TokenDetail = () => {
   const [purchaseAmount, setPurchaseAmount] = useState('');
   const [cost, setCost] = useState('0');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [walletAddress, setWalletAddress] = useState('');
   const navigate = useNavigate(); 
 
   const tokenDetails = card || {
@@ -38,7 +39,6 @@ const TokenDetail = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-       
         const ownersResponse = await fetch(
           `https://deep-index.moralis.io/api/v2.2/erc20/${tokenAddress}/owners?chain=sepolia&order=DESC`,
           {
@@ -51,7 +51,6 @@ const TokenDetail = () => {
         const ownersData = await ownersResponse.json();
         setOwners(ownersData.result || []);
 
-       
         const transfersResponse = await fetch(
           `https://deep-index.moralis.io/api/v2.2/erc20/${tokenAddress}/transfers?chain=sepolia&order=DESC`,
           {
@@ -123,17 +122,33 @@ const TokenDetail = () => {
     }
   };
 
+  // Connect wallet function
+  const connectWallet = async () => {
+    if (window.ethereum) {
+      try {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const accounts = await provider.send("eth_requestAccounts", []);
+        setWalletAddress(accounts[0]);
+      } catch (error) {
+        console.error("Wallet connection failed:", error);
+      }
+    } else {
+      alert("Please install a wallet extension like MetaMask or Trust Wallet.");
+      window.open("https://trustwallet.com/browser-extension", "_blank");
+    }
+  };
+
   return (
     <div className="token-detail-container">
-            <nav className="navbar">
-        
-        <button className="nav-button">[connect wallet]</button>
+      <nav className="navbar">
+        <button className="nav-button" onClick={connectWallet}>
+          {walletAddress ? `Wallet: ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : '[connect wallet]'}
+        </button>
       </nav>
 
       <h3 className="start-new-coin" onClick={() => navigate('/')}>[go back]</h3>
 
       <div className="token-details-section">
-
         <div className="token-details">
           <h2>Token Detail for {tokenDetails.name}</h2>
           <img src={tokenDetails.tokenImageUrl} alt={tokenDetails.name} className="token-detail-image" />
@@ -162,7 +177,6 @@ const TokenDetail = () => {
             </div>
           </div>
 
-       
           <div className="buy-tokens">
             <h3>Buy Tokens</h3>
             <input
@@ -177,7 +191,6 @@ const TokenDetail = () => {
         </div>
       </div>
 
-
       {isModalOpen && (
         <div className="modal">
           <div className="modal-content">
@@ -188,7 +201,6 @@ const TokenDetail = () => {
           </div>
         </div>
       )}
-
 
       <h3>Owners</h3>
       {loading ? (

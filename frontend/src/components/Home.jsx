@@ -2,23 +2,20 @@ import React, { useState, useEffect } from 'react';
 import '../App.css'; 
 import { useNavigate } from 'react-router-dom'; 
 const { ethers } = require('ethers');
-const {abi} = require("./abi")
+const { abi } = require("./abi");
 
 const App = () => {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [walletAddress, setWalletAddress] = useState('');
   const navigate = useNavigate(); 
-
 
   // Fetching meme tokens from the smart contract
   useEffect(() => {
     const fetchMemeTokens = async () => {
       try {
-      
-        const provider = new ethers.JsonRpcProvider(process.env.REACT_APP_RPC_URL)
-
-        console.log(provider)
+        const provider = new ethers.JsonRpcProvider(process.env.REACT_APP_RPC_URL);
         const contract = new ethers.Contract(process.env.REACT_APP_CONTRACT_ADDRESS, abi, provider);
 
         const memeTokens = await contract.getAllMemeTokens();
@@ -55,18 +52,34 @@ const App = () => {
     navigate(`/token-detail/${card.tokenAddress}`, { state: { card } }); // Use tokenAddress for URL
   };
 
+  // Connect wallet
+  const connectWallet = async () => {
+    if (window.ethereum) {
+      try {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const accounts = await provider.send("eth_requestAccounts", []);
+        setWalletAddress(accounts[0]);
+      } catch (error) {
+        console.error("Wallet connection failed:", error);
+      }
+    } else {
+      alert("Please install a wallet extension like Trust Wallet or MetaMask.");
+      window.open("https://trustwallet.com/browser-extension", "_blank");
+    }
+  };
+
   return (
     <div className="app">
       <nav className="navbar">
-       
-   
-        <button className="nav-button">[connect wallet]</button>
+        <button className="nav-button" onClick={connectWallet}>
+          {walletAddress ? `Wallet: ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : '[connect wallet]'}
+        </button>
       </nav>
       <div className="card-container">
         <h3 className="start-new-coin" onClick={() => navigate('/token-create')}>[start a new coin]</h3>
         <img src="/img.png" alt="Start a new coin" className="start-new-image"/>
         <span className="start-new-text">homer.fun</span>
-      
+
         {cards.length > 0 && (
           <div className="card main-card" onClick={() => navigateToTokenDetail(cards[0])}>
             <div className="card-content">
@@ -97,7 +110,6 @@ const App = () => {
           <p>Loading...</p>
         ) : (
           <div className="card-list">
-    
             {cards.slice(1).map((card, index) => (
               <div key={index} className="card" onClick={() => navigateToTokenDetail(card)}>
                 <div className="card-content">

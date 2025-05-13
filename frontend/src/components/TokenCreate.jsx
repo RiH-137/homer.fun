@@ -9,7 +9,24 @@ const TokenCreate = () => {
   const [ticker, setTicker] = useState('');
   const [description, setDescription] = useState('');
   const [imageUrl, setImageUrl] = useState('');
+  const [walletAddress, setWalletAddress] = useState('');
   const navigate = useNavigate();
+
+  // Connect wallet function
+  const connectWallet = async () => {
+    if (window.ethereum) {
+      try {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const accounts = await provider.send("eth_requestAccounts", []);
+        setWalletAddress(accounts[0]);
+      } catch (error) {
+        console.error("Wallet connection failed:", error);
+      }
+    } else {
+      alert("Please install a wallet extension like MetaMask or Trust Wallet.");
+      window.open("https://trustwallet.com/browser-extension", "_blank");
+    }
+  };
 
   const handleCreate = async () => {
     try {
@@ -53,7 +70,9 @@ const TokenCreate = () => {
   return (
     <div className="app">
       <nav className="navbar">
-        <button className="nav-button">[connect wallet]</button>
+        <button className="nav-button" onClick={connectWallet}>
+          {walletAddress ? `Wallet: ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : '[connect wallet]'}
+        </button>
       </nav>
       <div className="token-create-container">
         <h3 className="start-new-coin" onClick={() => navigate('/')}>[go back]</h3>
