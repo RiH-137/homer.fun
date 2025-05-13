@@ -21,6 +21,7 @@ const TokenCreate = () => {
         setWalletAddress(accounts[0]);
       } catch (error) {
         console.error("Wallet connection failed:", error);
+        alert("Error connecting to wallet. Please try again.");
       }
     } else {
       alert("Please install a wallet extension like MetaMask or Trust Wallet.");
@@ -40,7 +41,7 @@ const TokenCreate = () => {
 
       const contractAddress = process.env.REACT_APP_CONTRACT_ADDRESS;
 
-      // ✅ Only validate if needed:
+      // ✅ Validate contract address:
       if (!ethers.isAddress(contractAddress)) {
         alert("Invalid contract address!");
         return;
@@ -48,13 +49,15 @@ const TokenCreate = () => {
 
       const contract = new ethers.Contract(contractAddress, abi, signer);
 
+      // Prepare the transaction
       const transaction = await contract.createMemeToken(
         name,
         ticker,
         imageUrl,
         description,
         {
-          value: ethers.parseUnits("0.0001", "ether"),
+          value: ethers.parseUnits("0.0001", "ether"),  // Meme token creation fee
+          gasLimit: 500000, // Added a gas limit (adjust as necessary)
         }
       );
 
@@ -63,7 +66,12 @@ const TokenCreate = () => {
       navigate('/');
     } catch (error) {
       console.error('Error creating token:', error);
-      alert(`Error: ${error.message}`);
+      // Handle specific error types
+      if (error.code === 'CALL_EXCEPTION') {
+        alert("Transaction failed! Please check the contract parameters and try again.");
+      } else {
+        alert(`Error: ${error.message}`);
+      }
     }
   };
 

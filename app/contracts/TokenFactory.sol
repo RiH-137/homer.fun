@@ -89,7 +89,7 @@ contract TokenFactory {
 
 
 
-    // 1. Create a new meme token
+    // 1. Create a new meme token + deploy the contract
     function createMemeToken(string memory name, string memory symbol, string memory imageUrl, string memory description) public payable returns(address) {
 
         //should deploy the meme token, mint the initial supply to the token factory contract
